@@ -1,0 +1,42 @@
+# Keil MDK build outputs
+Objects/
+Listings/
+*.uvgui*
+*.uvopt
+*.build_log.htm
+*.obj
+*.lst
+*.lnp
+*.m51
+*.hex
+*.map
+*.map.old
+*.map.view
+*.objlist
+
+# EIDE build outputs
+build/
+bin/
+obj/
+out/
+*.ept
+*.eide-template
+.eide/log
+.eide.usr.ctx.json
+
+# Compiled binaries
+*.exe
+
+# Archives
+*.zip
+
+# Proteus machine-specific files
+*.workspace
+Project Backups/
+*.pdsbak
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
