@@ -44,6 +44,9 @@ venv/
 # Archives
 *.zip
 
+# Generated reports
+*.pdf
+
 # Proteus machine-specific files
 *.workspace
 Project Backups/
