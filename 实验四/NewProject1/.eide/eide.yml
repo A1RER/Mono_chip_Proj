@@ -1,0 +1,70 @@
+version: "4.1"
+name: NewProject1
+type: C51
+deviceName: null
+packDir: null
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files:
+    - path: ../uart.c
+    - path: ../alarm.c
+    - path: ../at24c08.c
+    - path: ../command.c
+    - path: ../ds18b20.c
+    - path: ../i2c.c
+    - path: ../key.c
+    - path: ../lcd1602.c
+    - path: ../main.c
+    - path: ../timer.c
+  folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: cc0596846d7ad586484c27d88782c210
+targets:
+  Debug:
+    cppPreprocessAttrs:
+      defineList: []
+      incList: []
+      libList: []
+    excludeList: []
+    settings: {}
+    toolchain: Keil_C51
+    toolchainConfigMap:
+      Keil_C51:
+        options:
+          version: 2
+          afterBuildTasks: []
+          asm-compiler: {}
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            optimization-level: level-8
+            optimization-type: SPEED
+          global:
+            ram-mode: SMALL
+            rom-mode: LARGE
+          linker:
+            output-format: elf
+            remove-unused: true
+      SDCC:
+        options:
+          version: 3
+          afterBuildTasks: []
+          asm-compiler: {}
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            language-c: c99
+          global:
+            device: mcs51
+            optimize-type: speed
+            use-non-free: false
+          linker:
+            $mainFileName: main
+            output-format: hex
+    uploadConfigMap:
+      Custom:
+        bin: ""
+        commandLine: ""
+        eraseChipCommand: ""
+    uploader: Custom
