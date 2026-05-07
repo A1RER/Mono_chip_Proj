@@ -13,6 +13,14 @@ Listings/
 *.map.old
 *.map.view
 *.objlist
+*.OBJ
+*.LST
+*.LNP
+*.M51
+*.HEX
+*.MAP
+*.bak
+*.tmp
 
 # EIDE build outputs
 build/
@@ -26,6 +34,12 @@ out/
 
 # Compiled binaries
 *.exe
+
+# Python helper scripts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
 
 # Archives
 *.zip
