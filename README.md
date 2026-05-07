@@ -1,42 +1,102 @@
-# 单片机课程实验 - STC89C52
+# 单片机实验 — STC89C52
 
-本仓库整理了基于 STC89C52/8051 兼容单片机的课程实验代码，主要平台为普中 HC6800-ES V2.0，使用 Keil C51、EIDE、STC-ISP 和串口工具完成开发与验证。
+基于 STC89C52（8051 兼容）的课程实验，平台为普中 HC6800-ES V2.0。
 
-## 实验目录
+---
 
-| 目录 | 内容 |
+## 实验一　LED 流水灯 / 蜂鸣器
+
+**硬件:** STC89C52，12 MHz 晶振，Keil MDK 工程
+
+| 源文件 | 功能 |
 |---|---|
-| `实验一/` | LED 流水灯、蜂鸣器报警 |
-| `实验二/` | 数码管、矩阵键盘、LCD1602 |
-| `实验三/` | DS1302 RTC、LCD1602、串口时间同步 |
-| `实验四/` | DS18B20 温度采集、LCD1602、AT24C08、串口命令、报警 |
+| `main.c` | P2 口 8 路 LED 单向流水灯，每步 500 ms |
+| `main_bidirection.c` | P2 口 LED 双向流水灯 |
+| `main_buzzer_alarm.c` | P1.5 无源蜂鸣器报警 + LED 联动 |
 
-## 实验四：基于 DS18B20 的温度传感器
+---
 
-实验四是当前整理后的完整工程，源码位于 `实验四/`，EIDE 工程位于 `实验四/NewProject1/`。
+## 实验二　数码管 + 矩阵键盘 + LCD1602
+
+**硬件:** STC89C52，Keil MDK 工程
+- P0 — 数码管段选（共阴）；P2 — 位选 / 74HC138 译码
+- LCD1602：D0-D7=P0，RS/RW/EN=P2
+
+| 源文件 | 功能 |
+|---|---|
+| `Exp1_Date.c` | 8 位数码管动态扫描，循环显示日期 / 学号 / 生日，约 2 s 切换一次 |
+| `Exp2_Countdown.c` | 2 位数码管循环倒计时 59→0，Timer0 1 ms 中断计时（24 MHz 晶振） |
+| `Exp3_KeyCountdown.c` | 矩阵键盘控制倒计时的启停与预置 |
+| `main.c` | 矩阵键盘扫描，按键值实时显示在 LCD1602 第 2 行 |
+
+---
+
+## 实验三　DS1302 + LCD1602 + 串口 RTC 同步
+
+**硬件:** HC6800-ES V2.0（STC89C52），11.0592 MHz 晶振，EIDE 工程（`project260423/`）
+
+**引脚分配**
+
+| 外设 | 引脚 |
+|---|---|
+| LCD1602 D0-D7 | P0 |
+| LCD1602 RS/RW/EN | P2.6 / P2.5 / P2.7 |
+| 矩阵键盘 行/列 | P1.0-P1.3 / P1.4-P1.7 |
+| 独立按键 K1/K2/K3 | P3.1 / P3.0 / P3.2 |
+| DS1302 CLK/DAT/RST | P3.6 / P3.4 / P3.5 |
+| 串口 RXD/TXD | P3.0 / P3.1（9600 bps） |
+
+> K3 循环切换五个任务，K1/K2 在任务二中用于加减调节。
+
+### 五个任务（K3 循环切换）
+
+| 任务 | 说明 |
+|---|---|
+| 任务 1 | LCD 静态显示学号后三位与姓名首字母 |
+| 任务 2 | 矩阵键盘实时显示键值；K1/K2 短按 ±1、长按 ±2，范围 1-16 |
+| 任务 3 | Timer0 50 ms 中断驱动的 24 小时软件时钟（初始 23:59:55） |
+| 任务 4 | DS1302 硬件 RTC（掉电保持，初始 23:59:55），LCD 显示 BCD 原值用于调试 |
+| 任务 5 | PC 端通过串口每隔 N 秒发送 `HH:MM:SS\n` 校准 DS1302，LCD 实时显示 |
+
+### 串口时间同步工具
+
+```bash
+pip install pyserial
+python 实验三/uart_sync.py              # 默认 COM7，每 10 s 同步一次
+python 实验三/uart_sync.py COM5         # 指定串口
+python 实验三/uart_sync.py COM5 1       # 指定串口 + 同步间隔（秒）
+```
+
+> 运行前确认 LCD 已显示 `Serial+DS1302`（任务五），否则按 K3 切换。  
+> 脚本会强制 `dtr=False`，避免 CH340 在打开串口时触发单片机复位。
+
+---
+
+## 实验四　DS18B20 温度传感器 + EEPROM + 串口控制
+
+**硬件:** HC6800-ES V2.0（STC89C52），EIDE 工程（`实验四/NewProject1/`）
 
 ### 功能
 
 - DS18B20 温度采集，支持一位小数和负温度。
 - LCD1602 分页显示时间、温度、上下限、采集状态和上传间隔。
-- K3 翻页，K4 调节阈值，短按加 `0.5C`，长按减 `0.5C`。
+- K3 翻页，K4 调节阈值：短按 `+0.5C`，长按 `-0.5C`。
 - AT24C08 保存参数和采样记录。
-- 串口周期上传采集数据。
-- 串口命令控制采集、上传频率、温度上下限和时间。
-- 蜂鸣器报警，LED 模块 `P2.2/P2.3` 分别指示高温/低温报警。
+- 串口周期上传数据，并支持命令修改采集状态、上传间隔、上下限和时间。
+- 无源蜂鸣器报警，LED 模块 `P2.2/P2.3` 分别指示高温/低温报警。
 
 ### 主要引脚
 
 | 外设 | 引脚 |
 |---|---|
-| LCD1602 数据口 | `P0` |
-| LCD1602 RS/RW/EN | `P2.6 / P2.5 / P2.7` |
-| DS18B20 DQ | `P3.7`，需要 `4.7k` 上拉到 VCC |
-| AT24C08 SCL/SDA | `P2.1 / P2.0` |
-| K3/K4 | `P3.2 / P3.3` |
-| 蜂鸣器 | `P1.5` |
-| 高温/低温报警 LED | `P2.2 / P2.3` |
-| 串口 RXD/TXD | `P3.0 / P3.1`，9600 bps |
+| LCD1602 数据口 | P0 |
+| LCD1602 RS/RW/EN | P2.6 / P2.5 / P2.7 |
+| DS18B20 DQ | P3.7（DQ 需 4.7k 上拉到 VCC） |
+| AT24C08 SCL/SDA | P2.1 / P2.0 |
+| K3/K4 | P3.2 / P3.3 |
+| 蜂鸣器 | P1.5 |
+| 高温/低温报警 LED | P2.2 / P2.3 |
+| 串口 RXD/TXD | P3.0 / P3.1（9600 bps） |
 
 ### 串口上传格式
 
@@ -55,48 +115,59 @@ TIME=12:30:05,TEM=25.6C,TEM_L=20.0C,TEM_H=30.0C,STATE=RUN
 | `TEM_H=XX.X` | 设置高温阈值 |
 | `TIME=hh:mm:ss` | 校准软件时钟 |
 
-返回示例：
-
-```text
-OK:START
-OK:STOP
-OK:T=3
-OK:TEM_L=18.5C
-OK:TEM_H=32.0C
-OK:TIME=12:30:00
-ERROR:CMD
-ERROR:VALUE
-```
-
 ### Python 串口工具
 
-命令行版：
-
 ```powershell
 cd D:\Mono_chip_proj\实验四\NewProject1
-python serial_test.py --port COM7
-```
-
-图形版：
-
-```powershell
-cd D:\Mono_chip_proj\实验四\NewProject1
-python serial_gui.py --port COM7
-```
-
-依赖：
-
-```powershell
 pip install pyserial
+python serial_test.py --port COM7       # 命令行版
+python serial_gui.py --port COM7        # 图形版
+```
+
+---
+
+## 目录结构
+
+```
+Mono_chip_proj/
+├── 实验一/
+│   ├── main.c                  # LED 单向流水灯
+│   ├── main_bidirection.c      # 双向流水灯
+│   ├── main_buzzer_alarm.c     # 蜂鸣器报警
+│   └── Project.uvproj          # Keil 工程文件
+├── 实验二/
+│   ├── Exp1_Date.c             # 数码管显示日期/学号/生日
+│   ├── Exp2_Countdown.c        # 数码管倒计时
+│   ├── Exp3_KeyCountdown.c     # 按键控制倒计时
+│   ├── main.c                  # 矩阵键盘 → LCD
+│   ├── LCD1602.c / .h
+│   ├── MatrixKey.c / .h
+│   ├── Delay.c / .h
+│   └── project.uvproj          # Keil 工程文件
+├── 实验三/
+│   ├── main.c                  # 五任务主程序
+│   ├── DS1302.c / .h           # RTC 驱动
+│   ├── LCD1602.c / .h          # LCD 驱动
+│   ├── MatrixKey.c / .h        # 矩阵键盘驱动
+│   ├── uart_sync.py            # PC 端串口时间同步脚本
+│   ├── uart_sync.cpp           # 同功能 C++ 版本，备用
+│   └── project260423/          # EIDE 工程
+└── 实验四/
+    ├── main.c                  # 系统初始化与主循环
+    ├── ds18b20.c / .h          # 温度传感器驱动
+    ├── lcd1602.c / .h          # LCD1602 驱动
+    ├── at24c08.c / .h          # EEPROM 存储
+    ├── i2c.c / .h              # 软件 I2C
+    ├── uart.c / .h             # 串口收发
+    ├── command.c / .h          # 串口命令解析
+    ├── key.c / .h              # 按键扫描
+    ├── alarm.c / .h            # 蜂鸣器与 LED 报警
+    └── NewProject1/            # EIDE 工程与串口辅助工具
 ```
 
 ## 开发环境
 
-- Keil C51
-- VS Code + EIDE
-- STC-ISP
-- Python 3.x + pyserial
-
-## 说明
-
-编译输出、HEX 文件、压缩包和 IDE 临时文件已通过 `.gitignore` 排除。仓库只保留源码、工程配置、说明文档和辅助测试脚本。
+- Keil MDK（实验一、二）或 EIDE 插件 for VS Code（实验三、四）
+- 编译器：Keil C51
+- 烧录：STC-ISP
+- Python 3.x + pyserial（串口辅助工具）
